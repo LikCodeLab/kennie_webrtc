@@ -5,9 +5,6 @@ plugins {
 
 apply from: "${rootDir}/configs/tools/gradle/library.gradle"
 
-android {
-}
-
 dependencies {
     implementation depK.core
     implementation depX.appcompat
