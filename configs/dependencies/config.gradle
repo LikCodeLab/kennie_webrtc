@@ -14,9 +14,9 @@
 ext {
 
     buildConfig = [
-            compileSdk  : 30,
+            compileSdk  : 31,
             minSdk      : 21,
-            targetSdk   : 30,
+            targetSdk   : 31,
             versionCode : 101,
             versionName : "1.0.1",
     ]

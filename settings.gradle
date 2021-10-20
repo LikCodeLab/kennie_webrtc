@@ -10,7 +10,7 @@ dependencyResolutionManagement {
         jcenter() // Warning: this repository is going to shut down soon
     }
 }
-rootProject.name = "KennieAndroidTemplate"
+rootProject.name = "kennie_webrtc"
 
 //************************演示项目 目录************************
 include ':app_example'
