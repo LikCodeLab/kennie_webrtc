@@ -1,0 +1,15 @@
+site_name: 模板项目文档
+site_author: kennie
+site_description: 一个综合高复用性的Android初始化项目模板框架
+copyright: Copyright &copy; 2021 kennie
+
+repo_name: KennieAndroidTemplate
+repo_url: https://github.com/kenniecode/KennieAndroidTemplate
+
+theme:
+  name: material
+  
+nav:
+  - 使用: index.md
+  - 开发日志: dev_log.md
+  - 更新日志: update_log.md
