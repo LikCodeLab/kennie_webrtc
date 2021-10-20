@@ -10,14 +10,13 @@
 
 package org.webrtc;
 
+import androidx.annotation.Nullable;
 
 /**
  * Java wrapper of native AndroidVideoTrackSource.
  */
 public class VideoSource extends MediaSource {
-    /**
-     * Simple aspect ratio clas for use in constraining output format.
-     */
+    /** Simple aspect ratio clas for use in constraining output format. */
     public static class AspectRatio {
         public static final AspectRatio UNDEFINED = new AspectRatio(/* width= */ 0, /* height= */ 0);
 
@@ -32,7 +31,7 @@ public class VideoSource extends MediaSource {
 
     private final NativeAndroidVideoTrackSource nativeAndroidVideoTrackSource;
     private final Object videoProcessorLock = new Object();
-    private VideoProcessor videoProcessor;
+    @Nullable private VideoProcessor videoProcessor;
     private boolean isCapturerRunning;
 
     private final CapturerObserver capturerObserver = new CapturerObserver() {
@@ -60,28 +59,20 @@ public class VideoSource extends MediaSource {
 
         @Override
         public void onFrameCaptured(VideoFrame frame) {
-            final NativeAndroidVideoTrackSource.FrameAdaptationParameters parameters =
+            final VideoProcessor.FrameAdaptationParameters parameters =
                     nativeAndroidVideoTrackSource.adaptFrame(frame);
-            if (parameters == null) {
-                // Drop frame.
-                return;
-            }
-
-            final VideoFrame.Buffer adaptedBuffer =
-                    frame.getBuffer().cropAndScale(parameters.cropX, parameters.cropY, parameters.cropWidth,
-                            parameters.cropHeight, parameters.scaleWidth, parameters.scaleHeight);
-            final VideoFrame adaptedFrame =
-                    new VideoFrame(adaptedBuffer, frame.getRotation(), parameters.timestampNs);
-
             synchronized (videoProcessorLock) {
                 if (videoProcessor != null) {
-                    videoProcessor.onFrameCaptured(adaptedFrame);
-                    adaptedBuffer.release();
+                    videoProcessor.onFrameCaptured(frame, parameters);
                     return;
                 }
             }
-            nativeAndroidVideoTrackSource.onFrameCaptured(adaptedFrame);
-            adaptedBuffer.release();
+
+            VideoFrame adaptedFrame = VideoProcessor.applyFrameAdaptationParameters(frame, parameters);
+            if (adaptedFrame != null) {
+                nativeAndroidVideoTrackSource.onFrameCaptured(adaptedFrame);
+                adaptedFrame.release();
+            }
         }
     };
 
@@ -115,14 +106,16 @@ public class VideoSource extends MediaSource {
                 /* maxPortraitPixelCount= */ portraitWidth * portraitHeight, fps);
     }
 
-    /**
-     * Same as above, with even more control as each constraint is optional.
-     */
+    /** Same as above, with even more control as each constraint is optional. */
     public void adaptOutputFormat(AspectRatio targetLandscapeAspectRatio,
-                                  Integer maxLandscapePixelCount, AspectRatio targetPortraitAspectRatio,
-                                  Integer maxPortraitPixelCount, Integer maxFps) {
+                                  @Nullable Integer maxLandscapePixelCount, AspectRatio targetPortraitAspectRatio,
+                                  @Nullable Integer maxPortraitPixelCount, @Nullable Integer maxFps) {
         nativeAndroidVideoTrackSource.adaptOutputFormat(targetLandscapeAspectRatio,
                 maxLandscapePixelCount, targetPortraitAspectRatio, maxPortraitPixelCount, maxFps);
+    }
+
+    public void setIsScreencast(boolean isScreencast) {
+        nativeAndroidVideoTrackSource.setIsScreencast(isScreencast);
     }
 
     /**
@@ -132,7 +125,7 @@ public class VideoSource extends MediaSource {
      * are passed to this object. The video processor is allowed to deliver the processed frames
      * back on any thread.
      */
-    public void setVideoProcessor(VideoProcessor newVideoProcessor) {
+    public void setVideoProcessor(@Nullable VideoProcessor newVideoProcessor) {
         synchronized (videoProcessorLock) {
             if (videoProcessor != null) {
                 videoProcessor.setSink(/* sink= */ null);
@@ -142,7 +135,9 @@ public class VideoSource extends MediaSource {
             }
             videoProcessor = newVideoProcessor;
             if (newVideoProcessor != null) {
-                newVideoProcessor.setSink(nativeAndroidVideoTrackSource::onFrameCaptured);
+                newVideoProcessor.setSink(
+                        (frame)
+                                -> runWithReference(() -> nativeAndroidVideoTrackSource.onFrameCaptured(frame)));
                 if (isCapturerRunning) {
                     newVideoProcessor.onCapturerStarted(/* success= */ true);
                 }
@@ -154,9 +149,7 @@ public class VideoSource extends MediaSource {
         return capturerObserver;
     }
 
-    /**
-     * Returns a pointer to webrtc::VideoTrackSourceInterface.
-     */
+    /** Returns a pointer to webrtc::VideoTrackSourceInterface. */
     long getNativeVideoTrackSource() {
         return getNativeMediaSource();
     }

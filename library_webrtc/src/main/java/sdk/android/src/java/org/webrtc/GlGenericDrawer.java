@@ -12,8 +12,11 @@ package org.webrtc;
 
 import android.opengl.GLES11Ext;
 import android.opengl.GLES20;
-
+import androidx.annotation.Nullable;
 import java.nio.FloatBuffer;
+import org.webrtc.GlShader;
+import org.webrtc.GlUtil;
+import org.webrtc.RendererCommon;
 
 /**
  * Helper class to implement an instance of RendererCommon.GlDrawer that can accept multiple input
@@ -52,38 +55,38 @@ class GlGenericDrawer implements RendererCommon.GlDrawer {
      * the shader that needs to happen every frame.
      */
     void onPrepareShader(GlShader shader, float[] texMatrix, int frameWidth, int frameHeight,
-        int viewportWidth, int viewportHeight);
+                         int viewportWidth, int viewportHeight);
   }
 
   private static final String INPUT_VERTEX_COORDINATE_NAME = "in_pos";
   private static final String INPUT_TEXTURE_COORDINATE_NAME = "in_tc";
   private static final String TEXTURE_MATRIX_NAME = "tex_mat";
   private static final String DEFAULT_VERTEX_SHADER_STRING = "varying vec2 tc;\n"
-      + "attribute vec4 in_pos;\n"
-      + "attribute vec4 in_tc;\n"
-      + "uniform mat4 tex_mat;\n"
-      + "void main() {\n"
-      + "  gl_Position = in_pos;\n"
-      + "  tc = (tex_mat * in_tc).xy;\n"
-      + "}\n";
+          + "attribute vec4 in_pos;\n"
+          + "attribute vec4 in_tc;\n"
+          + "uniform mat4 tex_mat;\n"
+          + "void main() {\n"
+          + "  gl_Position = in_pos;\n"
+          + "  tc = (tex_mat * in_tc).xy;\n"
+          + "}\n";
 
   // Vertex coordinates in Normalized Device Coordinates, i.e. (-1, -1) is bottom-left and (1, 1)
   // is top-right.
   private static final FloatBuffer FULL_RECTANGLE_BUFFER = GlUtil.createFloatBuffer(new float[] {
-      -1.0f, -1.0f, // Bottom left.
-      1.0f, -1.0f, // Bottom right.
-      -1.0f, 1.0f, // Top left.
-      1.0f, 1.0f, // Top right.
+          -1.0f, -1.0f, // Bottom left.
+          1.0f, -1.0f, // Bottom right.
+          -1.0f, 1.0f, // Top left.
+          1.0f, 1.0f, // Top right.
   });
 
   // Texture coordinates - (0, 0) is bottom-left and (1, 1) is top-right.
   private static final FloatBuffer FULL_RECTANGLE_TEXTURE_BUFFER =
-      GlUtil.createFloatBuffer(new float[] {
-          0.0f, 0.0f, // Bottom left.
-          1.0f, 0.0f, // Bottom right.
-          0.0f, 1.0f, // Top left.
-          1.0f, 1.0f, // Top right.
-      });
+          GlUtil.createFloatBuffer(new float[] {
+                  0.0f, 0.0f, // Bottom left.
+                  1.0f, 0.0f, // Bottom right.
+                  0.0f, 1.0f, // Top left.
+                  1.0f, 1.0f, // Top right.
+          });
 
   static String createFragmentShaderString(String genericFragmentSource, ShaderType shaderType) {
     final StringBuilder stringBuilder = new StringBuilder();
@@ -123,8 +126,8 @@ class GlGenericDrawer implements RendererCommon.GlDrawer {
   private final String genericFragmentSource;
   private final String vertexShader;
   private final ShaderCallbacks shaderCallbacks;
-    private ShaderType currentShaderType;
-    private GlShader currentShader;
+  @Nullable private ShaderType currentShaderType;
+  @Nullable private GlShader currentShader;
   private int inPosLocation;
   private int inTcLocation;
   private int texMatrixLocation;
@@ -134,7 +137,7 @@ class GlGenericDrawer implements RendererCommon.GlDrawer {
   }
 
   public GlGenericDrawer(
-      String vertexShader, String genericFragmentSource, ShaderCallbacks shaderCallbacks) {
+          String vertexShader, String genericFragmentSource, ShaderCallbacks shaderCallbacks) {
     this.vertexShader = vertexShader;
     this.genericFragmentSource = genericFragmentSource;
     this.shaderCallbacks = shaderCallbacks;
@@ -143,7 +146,7 @@ class GlGenericDrawer implements RendererCommon.GlDrawer {
   // Visible for testing.
   GlShader createShader(ShaderType shaderType) {
     return new GlShader(
-        vertexShader, createFragmentShaderString(genericFragmentSource, shaderType));
+            vertexShader, createFragmentShaderString(genericFragmentSource, shaderType));
   }
 
   /**
@@ -152,9 +155,9 @@ class GlGenericDrawer implements RendererCommon.GlDrawer {
    */
   @Override
   public void drawOes(int oesTextureId, float[] texMatrix, int frameWidth, int frameHeight,
-      int viewportX, int viewportY, int viewportWidth, int viewportHeight) {
+                      int viewportX, int viewportY, int viewportWidth, int viewportHeight) {
     prepareShader(
-        ShaderType.OES, texMatrix, frameWidth, frameHeight, viewportWidth, viewportHeight);
+            ShaderType.OES, texMatrix, frameWidth, frameHeight, viewportWidth, viewportHeight);
     // Bind the texture.
     GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
     GLES20.glBindTexture(GLES11Ext.GL_TEXTURE_EXTERNAL_OES, oesTextureId);
@@ -171,9 +174,9 @@ class GlGenericDrawer implements RendererCommon.GlDrawer {
    */
   @Override
   public void drawRgb(int textureId, float[] texMatrix, int frameWidth, int frameHeight,
-      int viewportX, int viewportY, int viewportWidth, int viewportHeight) {
+                      int viewportX, int viewportY, int viewportWidth, int viewportHeight) {
     prepareShader(
-        ShaderType.RGB, texMatrix, frameWidth, frameHeight, viewportWidth, viewportHeight);
+            ShaderType.RGB, texMatrix, frameWidth, frameHeight, viewportWidth, viewportHeight);
     // Bind the texture.
     GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
     GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId);
@@ -190,9 +193,9 @@ class GlGenericDrawer implements RendererCommon.GlDrawer {
    */
   @Override
   public void drawYuv(int[] yuvTextures, float[] texMatrix, int frameWidth, int frameHeight,
-      int viewportX, int viewportY, int viewportWidth, int viewportHeight) {
+                      int viewportX, int viewportY, int viewportWidth, int viewportHeight) {
     prepareShader(
-        ShaderType.YUV, texMatrix, frameWidth, frameHeight, viewportWidth, viewportHeight);
+            ShaderType.YUV, texMatrix, frameWidth, frameHeight, viewportWidth, viewportHeight);
     // Bind the textures.
     for (int i = 0; i < 3; ++i) {
       GLES20.glActiveTexture(GLES20.GL_TEXTURE0 + i);
@@ -209,18 +212,21 @@ class GlGenericDrawer implements RendererCommon.GlDrawer {
   }
 
   private void prepareShader(ShaderType shaderType, float[] texMatrix, int frameWidth,
-      int frameHeight, int viewportWidth, int viewportHeight) {
+                             int frameHeight, int viewportWidth, int viewportHeight) {
     final GlShader shader;
     if (shaderType.equals(currentShaderType)) {
       // Same shader type as before, reuse exising shader.
       shader = currentShader;
     } else {
       // Allocate new shader.
-      currentShaderType = shaderType;
+      currentShaderType = null;
       if (currentShader != null) {
         currentShader.release();
+        currentShader = null;
       }
+
       shader = createShader(shaderType);
+      currentShaderType = shaderType;
       currentShader = shader;
 
       shader.useProgram();
@@ -245,22 +251,22 @@ class GlGenericDrawer implements RendererCommon.GlDrawer {
     // Upload the vertex coordinates.
     GLES20.glEnableVertexAttribArray(inPosLocation);
     GLES20.glVertexAttribPointer(inPosLocation, /* size= */ 2,
-        /* type= */ GLES20.GL_FLOAT, /* normalized= */ false, /* stride= */ 0,
-        FULL_RECTANGLE_BUFFER);
+            /* type= */ GLES20.GL_FLOAT, /* normalized= */ false, /* stride= */ 0,
+            FULL_RECTANGLE_BUFFER);
 
     // Upload the texture coordinates.
     GLES20.glEnableVertexAttribArray(inTcLocation);
     GLES20.glVertexAttribPointer(inTcLocation, /* size= */ 2,
-        /* type= */ GLES20.GL_FLOAT, /* normalized= */ false, /* stride= */ 0,
-        FULL_RECTANGLE_TEXTURE_BUFFER);
+            /* type= */ GLES20.GL_FLOAT, /* normalized= */ false, /* stride= */ 0,
+            FULL_RECTANGLE_TEXTURE_BUFFER);
 
     // Upload the texture transformation matrix.
     GLES20.glUniformMatrix4fv(
-        texMatrixLocation, 1 /* count= */, false /* transpose= */, texMatrix, 0 /* offset= */);
+            texMatrixLocation, 1 /* count= */, false /* transpose= */, texMatrix, 0 /* offset= */);
 
     // Do custom per-frame shader preparation.
     shaderCallbacks.onPrepareShader(
-        shader, texMatrix, frameWidth, frameHeight, viewportWidth, viewportHeight);
+            shader, texMatrix, frameWidth, frameHeight, viewportWidth, viewportHeight);
     GlUtil.checkNoGLES2Error("Prepare shader");
   }
 

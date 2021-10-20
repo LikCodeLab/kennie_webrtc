@@ -12,14 +12,13 @@ package org.webrtc;
 
 import android.annotation.TargetApi;
 import android.content.Context;
-import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
+import androidx.annotation.Nullable;
 
 @TargetApi(21)
 public class Camera2Capturer extends CameraCapturer {
     private final Context context;
-    private final CameraManager cameraManager;
-    private static final String TAG = "Camera2Capturer";
+    @Nullable private final CameraManager cameraManager;
 
     public Camera2Capturer(Context context, String cameraName, CameraEventsHandler eventsHandler) {
         super(cameraName, eventsHandler, new Camera2Enumerator(context));
@@ -35,14 +34,5 @@ public class Camera2Capturer extends CameraCapturer {
                                        int framerate) {
         Camera2Session.create(createSessionCallback, events, applicationContext, cameraManager,
                 surfaceTextureHelper, cameraName, width, height, framerate);
-
-        Logging.d(TAG, "ZOOM==========================================");
-        try {
-            CameraCharacteristics characteristics = cameraManager.getCameraCharacteristics(cameraName);
-            float maxZoom = (characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM)) * 10;
-            Logging.d(TAG, Float.toString(maxZoom));
-        } catch (Exception e) {
-            Logging.e(TAG, "Error during camera init");
-        }
     }
 }

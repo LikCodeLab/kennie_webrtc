@@ -10,6 +10,7 @@
 
 package org.webrtc;
 
+import androidx.annotation.Nullable;
 import java.nio.ByteBuffer;
 
 public class NV12Buffer implements VideoFrame.Buffer {
@@ -21,7 +22,7 @@ public class NV12Buffer implements VideoFrame.Buffer {
   private final RefCountDelegate refCountDelegate;
 
   public NV12Buffer(int width, int height, int stride, int sliceHeight, ByteBuffer buffer,
-        Runnable releaseCallback) {
+                    @Nullable Runnable releaseCallback) {
     this.width = width;
     this.height = height;
     this.stride = stride;
@@ -57,16 +58,16 @@ public class NV12Buffer implements VideoFrame.Buffer {
 
   @Override
   public VideoFrame.Buffer cropAndScale(
-      int cropX, int cropY, int cropWidth, int cropHeight, int scaleWidth, int scaleHeight) {
+          int cropX, int cropY, int cropWidth, int cropHeight, int scaleWidth, int scaleHeight) {
     JavaI420Buffer newBuffer = JavaI420Buffer.allocate(scaleWidth, scaleHeight);
     nativeCropAndScale(cropX, cropY, cropWidth, cropHeight, scaleWidth, scaleHeight, buffer, width,
-        height, stride, sliceHeight, newBuffer.getDataY(), newBuffer.getStrideY(),
-        newBuffer.getDataU(), newBuffer.getStrideU(), newBuffer.getDataV(), newBuffer.getStrideV());
+            height, stride, sliceHeight, newBuffer.getDataY(), newBuffer.getStrideY(),
+            newBuffer.getDataU(), newBuffer.getStrideU(), newBuffer.getDataV(), newBuffer.getStrideV());
     return newBuffer;
   }
 
   private static native void nativeCropAndScale(int cropX, int cropY, int cropWidth, int cropHeight,
-      int scaleWidth, int scaleHeight, ByteBuffer src, int srcWidth, int srcHeight, int srcStride,
-      int srcSliceHeight, ByteBuffer dstY, int dstStrideY, ByteBuffer dstU, int dstStrideU,
-      ByteBuffer dstV, int dstStrideV);
+                                                int scaleWidth, int scaleHeight, ByteBuffer src, int srcWidth, int srcHeight, int srcStride,
+                                                int srcSliceHeight, ByteBuffer dstY, int dstStrideY, ByteBuffer dstU, int dstStrideU,
+                                                ByteBuffer dstV, int dstStrideV);
 }

@@ -12,7 +12,6 @@ package org.webrtc;
 
 import android.media.MediaRecorder;
 
-
 /**
  * Base interface for camera1 and camera2 implementations. Extends VideoCapturer with a
  * switchCamera() function. Also provides subinterfaces for handling camera events, and a helper
@@ -49,7 +48,7 @@ public interface CameraVideoCapturer extends VideoCapturer {
    * The callback may be called on an arbitrary thread.
    */
   public interface CameraSwitchHandler {
-    // Invoked on success. |isFrontCamera| is true if the new camera is front facing.
+    // Invoked on success. `isFrontCamera` is true if the new camera is front facing.
     void onCameraSwitchDone(boolean isFrontCamera);
 
     // Invoked on failure, e.g. camera is stopped or only one camera available.
@@ -61,6 +60,12 @@ public interface CameraVideoCapturer extends VideoCapturer {
    * This function can be called from any thread.
    */
   void switchCamera(CameraSwitchHandler switchEventsHandler);
+
+  /**
+   * Switch camera to the specified camera id. This can only be called while the camera is running.
+   * This function can be called from any thread.
+   */
+  void switchCamera(CameraSwitchHandler switchEventsHandler, String cameraName);
 
   /**
    * MediaRecorder add/remove handler - one of these functions are invoked with the result of
@@ -83,7 +88,7 @@ public interface CameraVideoCapturer extends VideoCapturer {
    */
   @Deprecated
   default void addMediaRecorderToCamera(
-      MediaRecorder mediaRecorder, MediaRecorderHandler resultHandler) {
+          MediaRecorder mediaRecorder, MediaRecorderHandler resultHandler) {
     throw new UnsupportedOperationException("Deprecated and not implemented.");
   }
 
@@ -119,7 +124,7 @@ public interface CameraVideoCapturer extends VideoCapturer {
         if (frameCount == 0) {
           ++freezePeriodCount;
           if (CAMERA_OBSERVER_PERIOD_MS * freezePeriodCount >= CAMERA_FREEZE_REPORT_TIMOUT_MS
-              && eventsHandler != null) {
+                  && eventsHandler != null) {
             Logging.e(TAG, "Camera freezed.");
             if (surfaceTextureHelper.isTextureInUse()) {
               // This can only happen if we are capturing to textures.
@@ -138,7 +143,7 @@ public interface CameraVideoCapturer extends VideoCapturer {
     };
 
     public CameraStatistics(
-        SurfaceTextureHelper surfaceTextureHelper, CameraEventsHandler eventsHandler) {
+            SurfaceTextureHelper surfaceTextureHelper, CameraEventsHandler eventsHandler) {
       if (surfaceTextureHelper == null) {
         throw new IllegalArgumentException("SurfaceTextureHelper is null");
       }

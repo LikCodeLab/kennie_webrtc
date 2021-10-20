@@ -27,6 +27,8 @@ import android.util.Log;
 import android.util.Range;
 import android.view.Surface;
 
+import androidx.annotation.Nullable;
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -65,10 +67,11 @@ class Camera2Session implements CameraSession {
     private CaptureFormat captureFormat;
 
     // Initialized when camera opens
-    private CameraDevice cameraDevice;
-    private Surface surface;
+    @Nullable private CameraDevice cameraDevice;
+    @Nullable private Surface surface;
 
     // Initialized when capture session is created
+    @Nullable
     private CameraCaptureSession captureSession;
 
     // State
@@ -309,22 +312,26 @@ class Camera2Session implements CameraSession {
             // If no optical mode is available, try software.
             final int[] availableVideoStabilization = cameraCharacteristics.get(
                     CameraCharacteristics.CONTROL_AVAILABLE_VIDEO_STABILIZATION_MODES);
-            for (int mode : availableVideoStabilization) {
-                if (mode == CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON) {
-                    captureRequestBuilder.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE,
-                            CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON);
-                    captureRequestBuilder.set(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE,
-                            CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_OFF);
-                    Logging.d(TAG, "Using video stabilization.");
-                    return;
+            if (availableVideoStabilization != null) {
+                for (int mode : availableVideoStabilization) {
+                    if (mode == CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON) {
+                        captureRequestBuilder.set(CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE,
+                                CaptureRequest.CONTROL_VIDEO_STABILIZATION_MODE_ON);
+                        captureRequestBuilder.set(CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE,
+                                CaptureRequest.LENS_OPTICAL_STABILIZATION_MODE_OFF);
+                        Logging.d(TAG, "Using video stabilization.");
+                        return;
+                    }
                 }
             }
+
             Logging.d(TAG, "Stabilization not available.");
         }
 
         private void chooseFocusMode(CaptureRequest.Builder captureRequestBuilder) {
             final int[] availableFocusModes =
                     cameraCharacteristics.get(CameraCharacteristics.CONTROL_AF_AVAILABLE_MODES);
+
             for (int mode : availableFocusModes) {
                 if (mode == CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_VIDEO) {
                     captureRequestBuilder.set(
@@ -380,7 +387,7 @@ class Camera2Session implements CameraSession {
 
         try {
             cameraCharacteristics = cameraManager.getCameraCharacteristics(cameraId);
-        } catch (final CameraAccessException e) {
+        } catch ( CameraAccessException | IllegalArgumentException e) {
             reportError("getCameraCharacteristics(): " + e.getMessage());
             return;
         }
@@ -389,6 +396,10 @@ class Camera2Session implements CameraSession {
                 == CameraMetadata.LENS_FACING_FRONT;
 
         findCaptureFormat();
+        if (captureFormat == null) {
+            // findCaptureFormat reports an error already.
+            return;
+        }
         openCamera();
     }
 
@@ -427,7 +438,7 @@ class Camera2Session implements CameraSession {
 
         try {
             cameraManager.openCamera(cameraId, new CameraStateCallback(), cameraThreadHandler);
-        } catch (CameraAccessException e) {
+        } catch (CameraAccessException | IllegalArgumentException e) {
             reportError("Failed to open camera: " + e);
             return;
         }

@@ -10,8 +10,7 @@
 
 package org.webrtc;
 
-
-import android.util.Log;
+import androidx.annotation.Nullable;
 
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -28,7 +27,8 @@ public class DefaultVideoEncoderFactory implements VideoEncoderFactory {
      */
     public DefaultVideoEncoderFactory(
             EglBase.Context eglContext, boolean enableIntelVp8Encoder, boolean enableH264HighProfile) {
-        this.hardwareVideoEncoderFactory = new HardwareVideoEncoderFactory(eglContext, enableIntelVp8Encoder, enableH264HighProfile);
+        this.hardwareVideoEncoderFactory =
+                new HardwareVideoEncoderFactory(eglContext, enableIntelVp8Encoder, enableH264HighProfile);
     }
 
     /**
@@ -38,25 +38,22 @@ public class DefaultVideoEncoderFactory implements VideoEncoderFactory {
         this.hardwareVideoEncoderFactory = hardwareVideoEncoderFactory;
     }
 
-
+    @Nullable
     @Override
     public VideoEncoder createEncoder(VideoCodecInfo info) {
         final VideoEncoder softwareEncoder = softwareVideoEncoderFactory.createEncoder(info);
         final VideoEncoder hardwareEncoder = hardwareVideoEncoderFactory.createEncoder(info);
-
-
         if (hardwareEncoder != null && softwareEncoder != null) {
-
             // Both hardware and software supported, wrap it in a software fallback
             return new VideoEncoderFallback(
-                    /* fallback= */softwareEncoder, /* primary= */ hardwareEncoder);
+                    /* fallback= */ softwareEncoder, /* primary= */ hardwareEncoder);
         }
         return hardwareEncoder != null ? hardwareEncoder : softwareEncoder;
     }
 
     @Override
     public VideoCodecInfo[] getSupportedCodecs() {
-        LinkedHashSet<VideoCodecInfo> supportedCodecInfos = new LinkedHashSet<>();
+        LinkedHashSet<VideoCodecInfo> supportedCodecInfos = new LinkedHashSet<VideoCodecInfo>();
 
         supportedCodecInfos.addAll(Arrays.asList(softwareVideoEncoderFactory.getSupportedCodecs()));
         supportedCodecInfos.addAll(Arrays.asList(hardwareVideoEncoderFactory.getSupportedCodecs()));
