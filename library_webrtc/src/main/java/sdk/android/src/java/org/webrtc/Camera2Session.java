@@ -12,6 +12,7 @@ package org.webrtc;
 
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.graphics.Rect;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -22,6 +23,7 @@ import android.hardware.camera2.CaptureFailure;
 import android.hardware.camera2.CaptureRequest;
 import android.os.Handler;
 
+import android.util.Log;
 import android.util.Range;
 import android.view.Surface;
 
@@ -117,8 +119,12 @@ class Camera2Session implements CameraSession {
         @Override
         public void onOpened(CameraDevice camera) {
             checkIsOnCameraThread();
+            System.out.println("++++++++++++++++++++++++++++++++");
+            System.out.println("++++++++++++++++++++++++++++++++");
+            System.out.println("++++++++++++++++++++++++++++++++");
 
-            Logging.d(TAG, "Camera opened.");
+            Logging.d(TAG, "Camera opened success");
+
             cameraDevice = camera;
 
             surfaceTextureHelper.setTextureSize(captureFormat.width, captureFormat.height);
@@ -141,6 +147,72 @@ class Camera2Session implements CameraSession {
         }
     }
 
+    public static float clamp(float val, float min, float max) {
+        return Math.max(min, Math.min(max, val));
+    }
+
+
+    public final class Zoom
+    {
+        private static final float DEFAULT_ZOOM_FACTOR = 1.0f;
+
+        //        @NonNull
+        private final Rect mCropRegion = new Rect();
+
+        public final float maxZoom;
+
+        //        @Nullable
+        private final Rect mSensorSize;
+
+        public final boolean hasSupport;
+
+        public Zoom(final CameraCharacteristics characteristics)
+        {
+            this.mSensorSize = characteristics.get(CameraCharacteristics.SENSOR_INFO_ACTIVE_ARRAY_SIZE);
+
+            if (this.mSensorSize == null)
+            {
+                this.maxZoom = Zoom.DEFAULT_ZOOM_FACTOR;
+                this.hasSupport = false;
+                return;
+            }
+
+            final Float value = characteristics.get(CameraCharacteristics.SCALER_AVAILABLE_MAX_DIGITAL_ZOOM);
+
+            this.maxZoom = ((value == null) || (value < Zoom.DEFAULT_ZOOM_FACTOR))
+                    ? Zoom.DEFAULT_ZOOM_FACTOR
+                    : value;
+
+            this.hasSupport = (Float.compare(this.maxZoom, Zoom.DEFAULT_ZOOM_FACTOR) > 0);
+        }
+
+        public void setZoom(final CaptureRequest.Builder builder, final float zoom)
+        {
+
+            if (this.hasSupport == false)
+            {
+                Logging.d("ZOOM","false");
+                return;
+            }
+            Logging.d("ZOOM","TRUE");
+
+            final float newZoom = clamp(zoom, Zoom.DEFAULT_ZOOM_FACTOR, this.maxZoom);
+
+            final int centerX = this.mSensorSize.width() / 2;
+            final int centerY = this.mSensorSize.height() / 2;
+            final int deltaX  = (int)((0.5f * this.mSensorSize.width()) / newZoom);
+            final int deltaY  = (int)((0.5f * this.mSensorSize.height()) / newZoom);
+
+            this.mCropRegion.set(centerX - deltaX,
+                    centerY - deltaY,
+                    centerX + deltaX,
+                    centerY + deltaY);
+
+            builder.set(CaptureRequest.SCALER_CROP_REGION, this.mCropRegion);
+        }
+    }
+
+
     private class CaptureSessionCallback extends CameraCaptureSession.StateCallback {
         @Override
         public void onConfigureFailed(CameraCaptureSession session) {
@@ -152,9 +224,10 @@ class Camera2Session implements CameraSession {
         @Override
         public void onConfigured(CameraCaptureSession session) {
             checkIsOnCameraThread();
-            Logging.d(TAG, "Camera capture session configured.");
+            Log.d(TAG, "Camera capture session configured......==================");
             captureSession = session;
             try {
+                Logging.d(TAG, "Camera capture session configured......==================");
                 /*
                  * The viable options for video capture requests are:
                  * TEMPLATE_PREVIEW: High frame rate is given priority over the highest-quality
@@ -164,6 +237,9 @@ class Camera2Session implements CameraSession {
                  */
                 final CaptureRequest.Builder captureRequestBuilder =
                         cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_RECORD);
+                Logging.d(TAG, "======================================================");
+                Zoom zObj = new Zoom(cameraCharacteristics);
+                zObj.setZoom(captureRequestBuilder, 50);
                 // Set auto exposure fps range.
                 captureRequestBuilder.set(CaptureRequest.CONTROL_AE_TARGET_FPS_RANGE,
                         new Range<Integer>(captureFormat.framerate.min / fpsUnitFactor,

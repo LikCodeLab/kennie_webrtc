@@ -180,9 +180,9 @@ abstract class CameraCapturer implements CameraVideoCapturer {
     private org.webrtc.CapturerObserver capturerObserver;
     private SurfaceTextureHelper surfaceHelper;
 
-    private final Object stateLock = new Object();
+    protected final Object stateLock = new Object();
     private boolean sessionOpening; /* guarded by stateLock */
-    private CameraSession currentSession; /* guarded by stateLock */
+    protected CameraSession currentSession; /* guarded by stateLock */
     private String cameraName; /* guarded by stateLock */
     private int width; /* guarded by stateLock */
     private int height; /* guarded by stateLock */
