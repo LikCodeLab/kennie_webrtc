@@ -1,0 +1,48 @@
+plugins {
+    id 'com.android.library'
+}
+android {
+    compileSdk 31
+
+    defaultConfig {
+        minSdk 21
+        targetSdk 31
+        versionCode 1
+        versionName "1.0"
+        consumerProguardFiles "consumer-rules.pro"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+}
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    // 官方库
+    // https://mvnrepository.com/artifact/org.webrtc/google-webrtc?repo=bt-google-webrtc
+    api 'org.webrtc:google-webrtc:1.0.32006'
+    // 自己编译的库
+//    api project(path: ':library_webrtc')
+}
+
+// upload
+//apply from: 'bintray.gradle'
+
+
+

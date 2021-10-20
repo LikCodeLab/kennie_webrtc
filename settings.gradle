@@ -20,3 +20,4 @@ include ':base_common'
 
 //************************webrtc 目录************************
 include ':library_webrtc'
+include ':rtc_chat'
