@@ -1,0 +1,137 @@
+/*
+ * Copyright (c) 2021 Kennie<24579435@qq.com>
+ *
+ * The software is licensed under the Mulan PSL v2.
+ * You can use this software according to the terms and conditions of the Mulan PSL v2.
+ * You may obtain a copy of Mulan PSL v2 at:
+ *     http://license.coscl.org.cn/MulanPSL2
+ * THIS SOFTWARE IS PROVIDED ON AN "AS IS" BASIS, WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO NON-INFRINGEMENT, MERCHANTABILITY OR FIT FOR A PARTICULAR
+ * PURPOSE.
+ * See the Mulan PSL v2 for more details.
+ */
+
+android {
+    compileSdk rootProject.ext.buildConfig.compileSdk
+    // 配置资源名前缀提示，避免资源名重复
+    //resourcePrefix project.name == 'app' ? '' : project.name.toLowerCase() + '_'
+
+    // 资源目录存放指引：https://developer.android.google.cn/guide/topics/resources/providing-resources
+    defaultConfig {
+        minSdkVersion rootProject.ext.buildConfig.minSdk as Integer
+        targetSdkVersion rootProject.ext.buildConfig.targetSdk as Integer
+        versionCode rootProject.ext.getAppVersionCode() as Integer
+        versionName rootProject.ext.getAppVersionName()
+//        versionName '4.12.1'
+//        versionCode 41201
+        println("************************ 版本信息 ************************")
+        println("versionCode: $versionCode\nversionName: $versionName")
+        buildConfigField "String", "BUILD_TIME", '"' + new Date().format("yyyy-MM-dd HH:mm:ss") + '"'
+        buildConfigField "String", "GIT_BRANCH", '"' + rootProject.ext.getGitBranch() + '"'
+        buildConfigField "String", "GIT_LATEST_COMMIT_HASH", '"' + rootProject.ext.getGitLatestCommitHashShort() + '"'
+
+    }
+
+    sourceSets {
+        main {
+            manifest.srcFile 'src/main/AndroidManifest.xml'
+            res.srcDirs = ['src/main/res']
+            java.srcDirs = ['src/main/java', 'src/main/kotlin']
+            assets.srcDirs = ['src/main/assets']
+            aidl.srcDirs = ['src/main/aidl']
+            jni.srcDirs = ['cpp', 'jni', 'src/main/cpp', 'src/main/jni']
+            jniLibs.srcDirs = ['libs', 'src/main/jniLibs']
+        }
+    }
+
+    compileOptions {
+        encoding 'UTF-8'
+        // jdk 1.8 开始支持 lambda 表达式
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    buildFeatures {
+        viewBinding true
+    }
+
+
+    def keystorePropsFile = rootProject.file('configs/tools/keystore/keystore.properties')
+    Properties keystoreProperties = new Properties()
+    keystoreProperties.load(new FileInputStream(keystorePropsFile))
+
+    /**
+     * 自定义签名配置
+     */
+    signingConfigs {
+
+        debug {
+            storeFile file(keystoreProperties['debug_storeFile'])
+            storePassword keystoreProperties['debug_storePassword']
+            keyAlias keystoreProperties['debug_keyAlias']
+            keyPassword keystoreProperties['debug_keyPassword']
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+
+        release {
+            storeFile file(keystoreProperties['release_storeFile'])
+            storePassword keystoreProperties['release_storePassword']
+            keyAlias keystoreProperties['release_keyAlias']
+            keyPassword keystoreProperties['release_keyPassword']
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+    }
+
+
+    // 代码警告配置
+    lintOptions {
+        //checkReleaseBuilds false
+        // 如果为 true，则当lint发现错误时停止 gradle构建
+        abortOnError false
+        // 执行命令 `${ANDROID_SDK_HOME}/tools/bin/lint --list` 查看可用的ID
+        // HardcodedText 禁用文本硬编码警告
+        //disable 'InvalidPackage', 'HardcodedText', 'SmallSp', 'ContentDescription', 'AddJavascriptInterface'
+    }
+
+    tasks.withType(JavaCompile) {
+        // 设置全局编码
+        options.encoding = 'UTF-8'
+    }
+
+    tasks.withType(Javadoc) {
+        // 设置文档编码
+        options {
+            encoding 'UTF-8'
+            charSet 'UTF-8'
+            links 'http://docs.oracle.com/javase/7/docs/api'
+        }
+    }
+
+    // 为了解决部分第三方库重复打包了META-INF的问题
+    packagingOptions {
+        doNotStrip '*/mips/*.so'
+        doNotStrip '*/mips64/*.so'
+        exclude 'DEPENDENCIES'
+        exclude 'LICENSE'
+        exclude 'NOTICE'
+        exclude 'META-INF/DEPENDENCIES'
+        exclude 'META-INF/NOTICE'
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/DEPENDENCIES.txt'
+        exclude 'META-INF/NOTICE.txt'
+        exclude 'META-INF/LICENSE.txt'
+        exclude 'META-INF/dependencies.txt'
+        exclude 'META-INF/notice.txt'
+        exclude 'META-INF/license.txt'
+        exclude 'META-INF/proguard/*.pro'
+        exclude 'META-INF/*.version'
+        exclude 'junit/*/*'
+        exclude 'androidsupportmultidexversion.txt'
+    }
+}

@@ -1,0 +1,19 @@
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repositories/google' }
+        maven { url 'https://maven.aliyun.com/repository/central' }
+        maven { url 'https://jitpack.io' }
+        google()
+        mavenCentral()
+        jcenter() // Warning: this repository is going to shut down soon
+    }
+}
+rootProject.name = "KennieAndroidTemplate"
+
+//************************演示项目 目录************************
+include ':app_example'
+
+//************************公共库 目录************************
+include ':base_common'
