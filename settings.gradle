@@ -19,5 +19,7 @@ include ':app_example'
 include ':base_common'
 
 //************************webrtc 目录************************
-include ':library_webrtc'
+include ':app_webrtc'
 include ':rtc_chat'
+include ':library_webrtc'
+

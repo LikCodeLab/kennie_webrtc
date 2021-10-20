@@ -1,0 +1,77 @@
+plugins {
+    id 'com.android.application'
+    id 'kotlin-android'
+}
+android {
+    compileSdk 31
+    defaultConfig {
+        applicationId "com.dds.webrtc"
+        minSdk 21
+        targetSdk 31
+        versionCode 1
+        versionName "1.0"
+
+        vectorDrawables.useSupportLibrary = true
+
+        ndk {
+            // 设置支持的SO库架构
+            abiFilters 'armeabi-v7a', 'x86'//, 'arm64-v8a'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+
+        debug {
+            applicationIdSuffix ".debug"
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        abortOnError false
+    }
+
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation depK.core
+    implementation depX.appcompat
+    implementation depX.material
+    implementation depX.constraintlayout
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.vectordrawable:vectordrawable:1.1.0'
+    // navigation
+    implementation 'androidx.navigation:navigation-fragment:2.3.0'
+    implementation 'androidx.navigation:navigation-ui:2.3.0'
+
+    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
+
+    // 内存泄漏检测
+//    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.4'
+
+    implementation project(path: ':rtc_chat')
+    // java
+    implementation 'org.java-websocket:Java-WebSocket:1.4.0'
+    implementation 'com.alibaba:fastjson:1.2.23'
+    //强大的弹窗库
+    implementation 'com.lxj:xpopup:2.2.0'
+    //eventbus
+    implementation 'org.greenrobot:eventbus:3.1.1'
+
+    implementation 'com.blankj:utilcodex:1.30.5'
+
+    //通知提示弹出库
+    api 'com.tapadoo.android:alerter:6.2.1'
+}
